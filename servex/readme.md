@@ -24,3 +24,17 @@ Servex provides the ability to set certain options on startup.
 Starting servex is as simple as calling `servex` if you desire to start the server
 on the default port `4050` else you can use the `-addr` option to set a custom `ip:port`
 combo to be used.
+
+Servex provides two routes:
+
+  - `/files` which serves any file within the current directory and any subdirectory
+
+  - `/assets` which serves any file specifically within the asset path provided.
+
+If there is a `index.html` file found in the directory and the `-withIndex` option 
+is not false then that will be loaded once you navigate to the `ip:port` address 
+used by servex.
+
+## Disclaimer
+Servex is rather simple, its just to provide a easy solution to use and not a highly
+featured server.
