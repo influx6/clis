@@ -22,7 +22,7 @@ Servex provides the ability to set certain options on startup.
 ```
 
 Starting servex is as simple as calling `servex` if you desire to start the server
-on the default port `4050` else you can use the `-addr` option to set a custom `ip:port`
+on the default port `4050` else you can use the `-addrs` option to set a custom `ip:port`
 combo to be used.
 
 Servex provides two routes:
