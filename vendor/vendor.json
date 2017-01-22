@@ -1,0 +1,79 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "67Ufp7gCzJyjLVW3iW3og8uVtkw=",
+			"path": "github.com/dimfeld/httppath",
+			"revision": "c8e499c3ef3c3e272ed8bdcc1ccf39f73c88debc",
+			"revisionTime": "2014-05-15T16:47:37Z"
+		},
+		{
+			"checksumSHA1": "nIykkBgco5LIwtjzs0WDcgiIAWg=",
+			"path": "github.com/dimfeld/httptreemux",
+			"revision": "612c3d8e47f5a166d9346b694cf2aeb68eff5369",
+			"revisionTime": "2016-04-05T15:43:20Z"
+		},
+		{
+			"checksumSHA1": "l+9zkLpQoH1bWRCY3hx3nTRsAos=",
+			"path": "github.com/go-humble/detect",
+			"revision": "714e9e4d821cb7daac42b10f6f91fe5da00fa6fb",
+			"revisionTime": "2015-07-12T05:04:33Z"
+		},
+		{
+			"checksumSHA1": "P3zGmsNjW8m15a+nks4FdVpFKwE=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "dcd7ed070932688cbd543449d96aaae225ffd90c",
+			"revisionTime": "2017-01-07T17:36:28Z"
+		},
+		{
+			"checksumSHA1": "RGMbX6cdOUwcnfbc4w9rNxcmadU=",
+			"path": "github.com/influx6/faux/context",
+			"revision": "c9600179e68239727209a2f53e4eb63bf88c3e24",
+			"revisionTime": "2017-01-22T00:08:40Z"
+		},
+		{
+			"checksumSHA1": "M73CcDk+JaRJ+wosdM+tNO6brRM=",
+			"path": "github.com/influx6/faux/raf",
+			"revision": "c9600179e68239727209a2f53e4eb63bf88c3e24",
+			"revisionTime": "2017-01-22T00:08:40Z"
+		},
+		{
+			"checksumSHA1": "Yl4+Yb0f+PyopTidlL63xyPwgg4=",
+			"path": "github.com/influx6/faux/reflection",
+			"revision": "c9600179e68239727209a2f53e4eb63bf88c3e24",
+			"revisionTime": "2017-01-22T00:08:40Z"
+		},
+		{
+			"checksumSHA1": "Y/iD2vvGctJZCDCnLo3EXPbGUVQ=",
+			"path": "github.com/influx6/faux/regos",
+			"revision": "c9600179e68239727209a2f53e4eb63bf88c3e24",
+			"revisionTime": "2017-01-22T00:08:40Z"
+		},
+		{
+			"checksumSHA1": "lrDAr/JlkY/+B+KZmt2RX5XCNwk=",
+			"path": "github.com/influx6/fractals",
+			"revision": "b588958f8a2e6870ab8bc10c12bad8e57a55b6a4",
+			"revisionTime": "2017-01-22T00:48:01Z"
+		},
+		{
+			"checksumSHA1": "8XJx6jGdtMtVBf6Y1TUJVmx3+nM=",
+			"path": "github.com/influx6/fractals/fhttp",
+			"revision": "b588958f8a2e6870ab8bc10c12bad8e57a55b6a4",
+			"revisionTime": "2017-01-22T00:48:01Z"
+		},
+		{
+			"checksumSHA1": "Q8rQXufco6HsyJ3AwtzQmxTldRo=",
+			"path": "github.com/influx6/fractals/fhttp/mimes",
+			"revision": "b588958f8a2e6870ab8bc10c12bad8e57a55b6a4",
+			"revisionTime": "2017-01-22T00:48:01Z"
+		},
+		{
+			"checksumSHA1": "XaMPRsuFot86DMEIjeNh9oKf02M=",
+			"path": "github.com/influx6/fractals/fs",
+			"revision": "b588958f8a2e6870ab8bc10c12bad8e57a55b6a4",
+			"revisionTime": "2017-01-22T00:48:01Z"
+		}
+	],
+	"rootPath": "github.com/influx6/clis"
+}
