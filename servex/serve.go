@@ -18,6 +18,7 @@ func main() {
 		hasIndexFile bool
 		basePath     string
 		assetPath    string
+		assetURL     string
 		extraFiles   string
 		files        []string
 	)
@@ -33,6 +34,7 @@ func main() {
 	flag.StringVar(&addrs, "addrs", ":4050", "addrs: The address and port to use for the http server.")
 	flag.StringVar(&basePath, "base", pwd, "base: This values sets the path to be loaded as the base path.\n\t")
 	flag.StringVar(&assetPath, "assets", defaultAssets, "assets: sets the absolute path to use for assets.\n\t")
+	flag.StringVar(&assetURL, "assetURL", "/assets/*", "assetURL: Sets the path to be used for the server in serving assegs\n\tExample: servex -assetURL static/assets")
 	flag.BoolVar(&hasIndexFile, "withIndex", true, "withIndex: Indicates whether we should serve index.html as root path.")
 	flag.Parse()
 
@@ -43,17 +45,28 @@ func main() {
 		}
 	}
 
-	rootDir, _ := os.Getwd()
+	assetURL = strings.TrimSpace(assetURL)
+	if !strings.HasPrefix(assetURL, "/") {
+		assetURL = "/" + assetURL
+	}
+
+	if !strings.HasSuffix(assetURL, "*") {
+		if strings.HasSuffix(assetURL, "/") {
+			assetURL += "*"
+		} else {
+			assetURL += "/*"
+		}
+	}
 
 	basePath = filepath.Clean(basePath)
 	assetPath = filepath.Clean(assetPath)
 
 	if strings.HasPrefix(basePath, ".") || !strings.HasPrefix(basePath, "/") {
-		basePath = filepath.Join(rootDir, basePath)
+		basePath = filepath.Join(pwd, basePath)
 	}
 
 	if strings.HasPrefix(assetPath, ".") || !strings.HasPrefix(assetPath, "/") {
-		assetPath = filepath.Join(rootDir, assetPath)
+		assetPath = filepath.Join(pwd, assetPath)
 	}
 
 	apphttp := fhttp.Drive(fhttp.MW(fhttp.RequestLogger(os.Stdout)))(fhttp.MW(fhttp.ResponseLogger(os.Stdout)))
@@ -61,7 +74,7 @@ func main() {
 	approuter := fhttp.Route(apphttp)
 
 	approuter(fhttp.Endpoint{
-		Path:    "/assets/*",
+		Path:    assetURL,
 		Method:  "GET",
 		Action:  func(ctx context.Context, rw *fhttp.Request) error { return nil },
 		LocalMW: fhttp.DirFileServer(assetPath, "/assets/"),
@@ -99,8 +112,9 @@ func main() {
 		})
 	}
 
-	fmt.Printf("Base Path: %q\n", basePath)
+	fmt.Printf("Assets URL: %q\n", assetURL)
 	fmt.Printf("Assets Path: %q\n", assetPath)
+	fmt.Printf("Base Path: %q\n", basePath)
 
 	apphttp.Serve(addrs)
 }
