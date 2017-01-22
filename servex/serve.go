@@ -77,7 +77,7 @@ func main() {
 		Path:    assetURL,
 		Method:  "GET",
 		Action:  func(ctx context.Context, rw *fhttp.Request) error { return nil },
-		LocalMW: fhttp.DirFileServer(assetPath, "/assets/"),
+		LocalMW: fhttp.DirFileServer(assetPath, strings.TrimSuffix(assetURL, "*")),
 	})
 
 	approuter(fhttp.Endpoint{
