@@ -53,7 +53,7 @@ func main() {
 	}
 
 	if strings.HasPrefix(assetPath, ".") || !strings.HasPrefix(assetPath, "/") {
-		basePath = filepath.Join(rootDir, assetPath)
+		assetPath = filepath.Join(rootDir, assetPath)
 	}
 
 	apphttp := fhttp.Drive(fhttp.MW(fhttp.RequestLogger(os.Stdout)))(fhttp.MW(fhttp.ResponseLogger(os.Stdout)))
@@ -101,5 +101,6 @@ func main() {
 
 	fmt.Printf("Base Path: %q\n", basePath)
 	fmt.Printf("Assets Path: %q\n", assetPath)
+
 	apphttp.Serve(addrs)
 }
