@@ -1,70 +1,65 @@
 package main
 
 import (
-  "os"
-  "flag"
-  "path/filepath"
+	"flag"
+	"os"
+	"path/filepath"
 
-  "net/http"
-  "github.com/influx6/faux/context"
-  "github.com/influx6/fractals/fhttp"
+	"github.com/influx6/faux/context"
+	"github.com/influx6/fractals/fhttp"
 )
 
-func main(){
+func main() {
 
-  var (
-    addrs string
-    hasIndexFile bool
-    basePath string
-    assetPath string
-  )
+	var (
+		addrs        string
+		hasIndexFile bool
+		basePath     string
+		assetPath    string
+	)
 
-  pwd, err := os.Getwd()
-  if err != nil {
-    panic(err)
-  }
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
-  defaultAssets := filepath.Join(pwd, "assets")
+	defaultAssets := filepath.Join(pwd, "assets")
 
+	flag.StringVar(&addrs, "addrs", ":4050", "addrs: The address and port to use for the http server.")
+	flag.StringVar(&basePath, "base", pwd, "base: This values sets the path to be loaded as the base path.\n\t")
+	flag.StringVar(&assetPath, "assets", defaultAssets, "assets: sets the absolute path to use for assets.\n\t")
+	flag.BoolVar(&hasIndexFile, "withIndex", true, "withIndex: Indicates whether we should serve index.html as root path.")
+	flag.Parse()
 
-  flag.StringVar(&addrs,"addrs",":4050", "addrs: The address and port to use for the http server.")
-  flag.StringVar(&basePath,"base",pwd, "base: This values sets the path to be loaded as the base path.\n\t")
-  flag.StringVar(&assetPath,"assets",defaultAssets, "assets: sets the absolute path to use for assets.\n\t")
-  flag.BoolVar(&hasIndexFile,"withIndex",true, "withIndex: Indicates whether we should serve index.html as root path.")
-  flag.Parse()
+	basePath = filepath.Clean(basePath)
+	assetPath = filepath.Clean(assetPath)
 
-  basePath = filepath.Clean(basePath)
-  assetPath = filepath.Clean(assetPath)
+	apphttp := fhttp.Drive(fhttp.MW(fhttp.RequestLogger(os.Stdout)))(fhttp.MW(fhttp.ResponseLogger(os.Stdout)))
 
+	approuter := fhttp.Route(apphttp)
 
-  app_http := fhttp.NewHTTP([]fhttp.DriveMiddleware{
-    fhttp.WrapMiddleware(fhttp.Logger()),
-  }, nil)
+	approuter(fhttp.Endpoint{
+		Path:    "/assets/*",
+		Method:  "GET",
+		Action:  func(ctx context.Context, rw *fhttp.Request) error { return nil },
+		LocalMW: fhttp.DirFileServer(assetPath, "/assets/"),
+	})
 
-  app_router := fhttp.Route(app_http)
+	approuter(fhttp.Endpoint{
+		Path:    "/files/*",
+		Method:  "GET",
+		Action:  func(ctx context.Context, rw *fhttp.Request) error { return nil },
+		LocalMW: fhttp.DirFileServer(basePath, "/files/"),
+	})
 
-  app_router(fhttp.Endpoint{
-    Path: "/assets/*",
-    Method: "GET",
-    Action: func(ctx context.Context, rw *fhttp.Request) error {return nil },
-    LocalMW: fhttp.FileServer(assetPath, "/assets/"),
-  })
+	if hasIndexFile {
+		approuter(fhttp.Endpoint{
+			Path:    "/",
+			Method:  "GET",
+			Action:  func(ctx context.Context, rw *fhttp.Request) error { return nil },
+			LocalMW: fhttp.IndexServer(basePath, "index.html", ""),
+		})
+	}
 
-  app_router(fhttp.Endpoint{
-    Path: "/files/*",
-    Method: "GET",
-    Action: func(ctx context.Context, rw *fhttp.Request) error {return nil },
-    LocalMW: fhttp.FileServer(basePath, "/files/"),
-  })
-
-  if hasIndexFile {
-    app_router(fhttp.Endpoint{
-      Path: "/",
-      Method: "GET",
-      Action: func(ctx context.Context, rw *fhttp.Request) error {return nil },
-      LocalMW: fhttp.IndexServer(basePath, "index.html",""),
-    })
-  }
-
-  http.ListenAndServe(addrs, app_http)
+	apphttp.Serve(addrs)
 }
