@@ -36,9 +36,11 @@ func main() {
 	flag.BoolVar(&hasIndexFile, "withIndex", true, "withIndex: Indicates whether we should serve index.html as root path.")
 	flag.Parse()
 
-	files = strings.Split(extraFiles, ",")
-	for index, fl := range files {
-		files[index] = strings.TrimSpace(fl)
+	if strings.TrimSpace(extraFiles) != "" {
+		files = strings.Split(extraFiles, ",")
+		for index, fl := range files {
+			files[index] = strings.TrimSpace(fl)
+		}
 	}
 
 	basePath = filepath.Clean(basePath)
