@@ -108,6 +108,8 @@ func main() {
 			flset[0] = "/" + flset[0]
 		}
 
+		fmt.Printf("Adding file %q with endpoint URL: %q\n", flset[1], flset[0])
+
 		approuter(fhttp.Endpoint{
 			Path:    flset[0],
 			Method:  "GET",
