@@ -22,6 +22,15 @@ type Task struct {
 	signal      chan struct{}
 }
 
+// Wait blocks until the tasks completes or it gets stopped.
+func (t *Task) Wait() {
+	if t.commando == nil {
+		return
+	}
+
+	t.commando.Wait()
+}
+
 // Stopped returns true/false if the given task has been stopped or not started.
 func (t *Task) Stopped() bool {
 	return t.commando == nil
@@ -106,7 +115,9 @@ func (t *Task) Stop(m io.Writer) {
 		err = t.commando.Process.Signal(os.Interrupt)
 	}
 
-	t.commando.Wait()
+	if errz := t.commando.Wait(); errz != nil {
+		fmt.Fprintf(m, taskError, t.Name, t.Description, t.Command, t.Parameters, errz.Error())
+	}
 
 	close(t.signal)
 

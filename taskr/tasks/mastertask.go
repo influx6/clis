@@ -58,11 +58,13 @@ func (mt *MasterTask) Run(mout, merr io.Writer) {
 	}
 
 	// Execute the main tasks and allow it hold io.
-	mt.Main.Run(mout)
+	go func() {
+		mt.Main.Run(mout)
 
-	if mt.LockIO {
-		go mt.Main.InputLoop(mout, merr)
-	}
+		if mt.LockIO {
+			go mt.Main.InputLoop(mout, merr)
+		}
+	}()
 
 	// Execute the after tasks.
 	for _, tk := range mt.After {
