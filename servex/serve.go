@@ -105,7 +105,7 @@ func main() {
 		}
 
 		if !strings.HasPrefix(flset[0], "/") {
-			flset[0] = "/" + assetURL
+			flset[0] = "/" + flset[0]
 		}
 
 		approuter(fhttp.Endpoint{
