@@ -104,6 +104,10 @@ func main() {
 			continue
 		}
 
+		if !strings.HasPrefix(flset[0], "/") {
+			flset[0] = "/" + assetURL
+		}
+
 		approuter(fhttp.Endpoint{
 			Path:    flset[0],
 			Method:  "GET",
