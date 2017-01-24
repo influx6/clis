@@ -2,56 +2,62 @@ package tasks
 
 var (
 	task = `
-   Task-------------------------------------------------
+ Task-------------------------------------------------
 
-    Name: %q
-    Description: %q
-    Command: [%q, %q]
-    Status: %q
+	Name: %q
+	Description: %q
+	Command: [%q, %q]
+	Status: %q
 
-  `
+`
 
 	taskOutput = `
-		  Task Logs:
-				 %q
-  `
+	Task Logs:
+	 %s
+
+`
 
 	taskErrOutput = `
-		  Task Errors:
-				 %q
-  `
+	Task Errors:
+	 %q
+
+`
+
+	taskLogs = `
+	-> %s
+`
 
 	taskBegin = `
-		  Starting Task: %q(%q)
-  `
+	Starting Task: %q(%q)
+`
 
 	taskEnd = `
-		  Stopping Task: %q(%q)
-  `
+	Stopping Task: %q(%q)
+`
 
 	taskMessage = `
-		  Message: %q
-  `
+	Message: %q
+`
 
 	taskKill = `
 
-    Task Killed:
+Task Killed:
 
-      Name: %q
-	    Description: %q
-      Command: [%q, %q]
-      Message: %q
+	Name: %q
+	Description: %q
+	Command: [%q, %q]
+	Message: %q
 
-  `
+	`
 
 	taskError = `
 
-    Task received errors:
+Task received errors:
 
-      Name: %q
-	    Description: %q
-      Command: [%q, %q]
-      Error: %q
+	Name: %q
+	Description: %q
+	Command: [%q, %q]
+	Error: %q
 
-  `
+	`
 )

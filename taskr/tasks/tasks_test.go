@@ -18,7 +18,7 @@ func TestMasterTask(t *testing.T) {
 			Command:     "find",
 			Parameters:  []string{"~ -type f -mtime 0"},
 		},
-		Before: []tasks.Task{
+		Before: []*tasks.Task{
 			{
 				Name:        "ListDir",
 				Description: "List Current Dir",
@@ -31,7 +31,7 @@ func TestMasterTask(t *testing.T) {
 				Parameters:  []string{"'Starting Todays report'"},
 			},
 		},
-		After: []tasks.Task{
+		After: []*tasks.Task{
 			{
 				Name:        "EchoName",
 				Description: "Echo Ending",

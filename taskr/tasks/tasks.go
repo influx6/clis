@@ -1,13 +1,12 @@
 package tasks
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 )
 
 // Task defines a struct which holds commands which must be executed when runned.
@@ -17,8 +16,6 @@ type Task struct {
 	Parameters  []string `json:"params"`
 	Description string   `json:"description"`
 	commando    *exec.Cmd
-	stdOut      bytes.Buffer
-	stdErr      bytes.Buffer
 	signal      chan struct{}
 }
 
@@ -37,72 +34,74 @@ func (t *Task) Stopped() bool {
 }
 
 // Run initializes the task to be invoked.
-func (t *Task) Run(m io.Writer) {
+func (t *Task) Run(outw io.Writer, errw io.Writer) {
 	t.signal = make(chan struct{})
+	close(t.signal)
 
 	t.commando = exec.Command(t.Command, t.Parameters...)
-	t.commando.Stdout = &t.stdOut
-	t.commando.Stderr = &t.stdErr
+
+	fmt.Fprintf(outw, task, t.Name, t.Description, t.Command, t.Parameters, "Executing")
+	t.inputLoop(outw, errw)
 
 	if err := t.commando.Start(); err != nil {
-		fmt.Fprintf(m, taskError, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+		fmt.Fprintf(outw, taskError, t.Name, t.Description, t.Command, t.Parameters, err.Error())
 		return
 	}
 
-	if t.commando.ProcessState.Exited() {
-		var status string
+	t.commando.Wait()
 
-		if t.commando.ProcessState.Success() {
-			status = "Passed!"
-		} else {
-			status = "Warning: Possible Error!"
-		}
+	if t.commando.ProcessState != nil {
+		fmt.Fprintf(outw, taskLogs, t.commando.ProcessState.String())
 
-		fmt.Fprintf(m, task, t.Name, t.Description, t.Command, t.Parameters, status)
-
-		if t.commando.ProcessState.Success() {
-			fmt.Fprintf(m, taskOutput, t.stdOut.String())
-		} else {
-			fmt.Fprintf(m, taskErrOutput, t.stdOut.String())
+		if t.commando.ProcessState.Exited() {
+			if t.commando.ProcessState.Success() {
+				fmt.Fprintf(outw, taskOutput, "Done!")
+			} else {
+				fmt.Fprintf(outw, taskErrOutput, "Failed!")
+			}
 		}
 	}
 }
 
-// InputLoop creates loops to read out and error details to be printed into
+// inputLoop creates loops to read out and error details to be printed into
 // the writers for the task.
-func (t *Task) InputLoop(outM, errM io.Writer) {
-	go func() {
-	inLoop:
-		for {
-			select {
-			case <-t.signal:
-				break inLoop
-			case <-time.After(10 * time.Millisecond):
-				fmt.Fprintf(errM, task, t.Name, t.Description, t.Command, t.Parameters, "Running!")
-				fmt.Fprintf(errM, taskErrOutput, t.stdErr.Bytes())
-				t.stdErr.Reset()
-			}
-		}
-	}()
+func (t *Task) inputLoop(outM, errM io.Writer) {
+	fmt.Fprintf(outM, taskBegin, t.Name, t.Description)
 
-	go func() {
-	inLoop:
-		for {
-			select {
-			case <-t.signal:
-				break inLoop
-			case <-time.After(10 * time.Millisecond):
-				fmt.Fprintf(outM, task, t.Name, t.Description, t.Command, t.Parameters, "Running!")
-				fmt.Fprintf(outM, taskOutput, t.stdOut.Bytes())
-				t.stdOut.Reset()
+	outReader, err := t.commando.StdoutPipe()
+	if err != nil {
+		fmt.Fprintf(outM, taskError, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+	} else {
+		go t.readInput(outReader, outM)
+	}
+
+	errReader, err := t.commando.StderrPipe()
+	if err != nil {
+		fmt.Fprintf(errM, taskError, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+	} else {
+		go t.readInput(errReader, errM)
+	}
+
+}
+
+func (t *Task) readInput(reader io.ReadCloser, out io.Writer) {
+	scanner := bufio.NewScanner(reader)
+
+	for {
+		select {
+		case <-t.signal:
+			if scanner.Scan() {
+				fmt.Fprintf(out, taskLogs, scanner.Text())
 			}
+		default:
+			return
 		}
-	}()
+	}
 }
 
 // Stop ends the task which when initialized.
 func (t *Task) Stop(m io.Writer) {
-	if t.commando.ProcessState.Exited() {
+	if t.signal == nil {
 		return
 	}
 
@@ -118,8 +117,6 @@ func (t *Task) Stop(m io.Writer) {
 	if errz := t.commando.Wait(); errz != nil {
 		fmt.Fprintf(m, taskError, t.Name, t.Description, t.Command, t.Parameters, errz.Error())
 	}
-
-	close(t.signal)
 
 	if err != nil {
 		msg = err.Error()

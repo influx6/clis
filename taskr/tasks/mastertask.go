@@ -15,8 +15,8 @@ type MasterTask struct {
 	RunTimePT int64 `json:"run_time_per_task"` // values held in seconds.
 	LockIO    bool  `json:"lock_io"`           // used to indincate if the main tasks must lock down io.
 
-	Before []Task `json:"before"`
-	After  []Task `json:"after"`
+	Before []*Task `json:"before"`
+	After  []*Task `json:"after"`
 }
 
 // Stop ends all it's internal tasks.
@@ -54,17 +54,14 @@ func (mt *MasterTask) Run(mout, merr io.Writer) {
 			tk.Stop(mout)
 		}()
 
-		tk.Run(mout)
+		tk.Run(mout, merr)
+		// tk.Wait()
 	}
 
 	// Execute the main tasks and allow it hold io.
-	go func() {
-		mt.Main.Run(mout)
-
-		if mt.LockIO {
-			go mt.Main.InputLoop(mout, merr)
-		}
-	}()
+	// go func() {
+	mt.Main.Run(mout, merr)
+	// }()
 
 	// Execute the after tasks.
 	for _, tk := range mt.After {
@@ -73,6 +70,8 @@ func (mt *MasterTask) Run(mout, merr io.Writer) {
 			tk.Stop(mout)
 		}()
 
-		tk.Run(mout)
+		tk.Run(mout, merr)
+		// tk.Wait()
 	}
+
 }
