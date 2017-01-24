@@ -10,7 +10,6 @@ import (
 func TestMasterTask(t *testing.T) {
 
 	mtask := tasks.MasterTask{
-		LockIO:    true,
 		RunTimePT: 120,
 		Main: &tasks.Task{
 			Name:        "TodaysFileReport",

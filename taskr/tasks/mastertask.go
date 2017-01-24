@@ -13,7 +13,6 @@ import (
 type MasterTask struct {
 	Main      *Task `json:"main"`
 	RunTimePT int64 `json:"run_time_per_task"` // values held in seconds.
-	LockIO    bool  `json:"lock_io"`           // used to indincate if the main tasks must lock down io.
 
 	Before []*Task `json:"before"`
 	After  []*Task `json:"after"`
