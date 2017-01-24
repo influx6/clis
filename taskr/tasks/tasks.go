@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 )
 
 // Task defines a struct which holds commands which must be executed when runned.
@@ -16,7 +17,8 @@ type Task struct {
 	Parameters  []string `json:"params"`
 	Description string   `json:"description"`
 	commando    *exec.Cmd
-	signal      chan struct{}
+	running     bool
+	rl          sync.Mutex
 }
 
 // Wait blocks until the tasks completes or it gets stopped.
@@ -35,8 +37,9 @@ func (t *Task) Stopped() bool {
 
 // Run initializes the task to be invoked.
 func (t *Task) Run(outw io.Writer, errw io.Writer) {
-	t.signal = make(chan struct{})
-	close(t.signal)
+	t.rl.Lock()
+	t.running = true
+	t.rl.Unlock()
 
 	t.commando = exec.Command(t.Command, t.Parameters...)
 
@@ -53,13 +56,13 @@ func (t *Task) Run(outw io.Writer, errw io.Writer) {
 	if t.commando.ProcessState != nil {
 		fmt.Fprintf(outw, taskLogs, t.commando.ProcessState.String())
 
-		if t.commando.ProcessState.Exited() {
-			if t.commando.ProcessState.Success() {
-				fmt.Fprintf(outw, taskOutput, "Done!")
-			} else {
-				fmt.Fprintf(outw, taskErrOutput, "Failed!")
-			}
-		}
+		// if t.commando.ProcessState.Exited() {
+		// 	if t.commando.ProcessState.Success() {
+		// 		fmt.Fprintf(outw, taskOutput, "Done!")
+		// 	} else {
+		// 		fmt.Fprintf(outw, taskErrOutput, "Failed!")
+		// 	}
+		// }
 	}
 }
 
@@ -87,23 +90,28 @@ func (t *Task) inputLoop(outM, errM io.Writer) {
 func (t *Task) readInput(reader io.ReadCloser, out io.Writer) {
 	scanner := bufio.NewScanner(reader)
 
-	for {
-		select {
-		case <-t.signal:
-			if scanner.Scan() {
-				fmt.Fprintf(out, taskLogs, scanner.Text())
-			}
-		default:
-			return
+	for scanner.Scan() {
+		t.rl.Lock()
+		if !t.running {
+			t.rl.Unlock()
+			break
 		}
+		t.rl.Unlock()
+
+		fmt.Fprintf(out, taskLogs, scanner.Text())
 	}
 }
 
 // Stop ends the task which when initialized.
 func (t *Task) Stop(m io.Writer) {
-	if t.signal == nil {
+	t.rl.Lock()
+	if !t.running {
+		t.rl.Unlock()
 		return
 	}
+	t.rl.Unlock()
+
+	t.running = false
 
 	var msg string
 	var err error
