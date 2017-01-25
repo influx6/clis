@@ -10,7 +10,6 @@ import (
 // provided files for different changes which will be notified by the handle
 // passed in.
 type FileSystemWatch struct {
-	dirs     []string
 	files    []string
 	done     chan struct{}
 	errors   func(error)
@@ -31,22 +30,46 @@ func FileSystemWatchFromGlob(filesGlob string, dirsGlob string, ev func(fsnotify
 		return nil, err
 	}
 
-	return NewFileSystemWatch(files, dirs, ev, errs), nil
+	dirs = append(dirs, files...)
+	return NewFileSystemWatch(dirs, ev, errs), nil
 }
 
 // NewFileSystemWatch returns a new instance of a FileSystemWatch.
-func NewFileSystemWatch(files []string, dirs []string, ev func(fsnotify.Event), errs func(error)) *FileSystemWatch {
+func NewFileSystemWatch(files []string, ev func(fsnotify.Event), errs func(error)) *FileSystemWatch {
 	return &FileSystemWatch{
-		dirs:   dirs,
 		files:  files,
 		events: ev,
 		errors: errs,
 	}
 }
 
+// Add add the giving sets of path into the watchers file lists ensuring they
+// are added for reuse when restarting and are added into the watcher if started.
+func (fs *FileSystemWatch) Add(ms ...string) error {
+	if fs.notifier == nil {
+		fs.files = append(fs.files, ms...)
+		return nil
+	}
+
+	fs.files = append(fs.files, ms...)
+
+	for _, file := range ms {
+		if err := fs.notifier.Add(file); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Stop ends the watcher, returning an error if the watcher fails to end appropriately.
 func (fs *FileSystemWatch) Stop() error {
-	return fs.notifier.Close()
+	if err := fs.notifier.Close(); err != nil {
+		return err
+	}
+
+	fs.notifier = nil
+	return nil
 }
 
 // Begin starts the file watchers, adds the directories and file paths which
@@ -79,12 +102,6 @@ func (fs *FileSystemWatch) Begin() error {
 
 	for _, file := range fs.files {
 		if err := fs.notifier.Add(file); err != nil {
-			return err
-		}
-	}
-
-	for _, dir := range fs.dirs {
-		if err := fs.notifier.Add(dir); err != nil {
 			return err
 		}
 	}

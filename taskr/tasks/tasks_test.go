@@ -3,6 +3,7 @@ package tasks_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/influx6/clis/taskr/tasks"
 )
@@ -10,7 +11,7 @@ import (
 func TestMasterTask(t *testing.T) {
 
 	mtask := tasks.MasterTask{
-		RunTimePT: 120,
+		MaxRunTime: 20 * time.Second,
 		Main: &tasks.Task{
 			Name:        "TodaysFileReport",
 			Description: "Finds all modified files today",

@@ -11,8 +11,8 @@ import (
 // Before and After tasks cant not down the calls, they are given a maximum of
 // 5min and then killed.
 type MasterTask struct {
-	Main      *Task `json:"main"`
-	RunTimePT int64 `json:"run_time_per_task"` // values held in seconds.
+	Main       *Task         `json:"main"`
+	MaxRunTime time.Duration `json:"max_runtime"` // values held in seconds.
 
 	Before []*Task `json:"before"`
 	After  []*Task `json:"after"`
@@ -49,28 +49,23 @@ func (mt *MasterTask) Run(mout, merr io.Writer) {
 	// Execute the before tasks.
 	for _, tk := range mt.Before {
 		go func() {
-			<-time.After(time.Duration(mt.RunTimePT) * time.Second)
+			<-time.After(mt.MaxRunTime)
 			tk.Stop(mout)
 		}()
 
 		tk.Run(mout, merr)
-		// tk.Wait()
 	}
 
 	// Execute the main tasks and allow it hold io.
-	// go func() {
 	mt.Main.Run(mout, merr)
-	// }()
 
 	// Execute the after tasks.
 	for _, tk := range mt.After {
 		go func() {
-			<-time.After(time.Duration(mt.RunTimePT) * time.Second)
+			<-time.After(mt.MaxRunTime)
 			tk.Stop(mout)
 		}()
 
 		tk.Run(mout, merr)
-		// tk.Wait()
 	}
-
 }
