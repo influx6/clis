@@ -30,7 +30,7 @@ func (mt *MasterTask) Stop(m io.Writer) {
 		tk.Stop(m)
 	}
 
-	mt.Stop(m)
+	mt.Main.Stop(m)
 
 	// Stop the after tasks.
 	for _, tk := range mt.After {

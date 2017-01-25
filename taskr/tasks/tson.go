@@ -20,8 +20,10 @@ type Tson struct {
 	FilesGlob   string        `json:"files_glob,omitempty"`
 	Files       []string      `json:"files,omitempty"`
 	WriteDelay  time.Duration `json:"write_delay"` // in seconds
+	Sink        io.Writer
 	killer      chan struct{}
 	restarter   chan struct{}
+	starter     chan struct{}
 	watcher     *FileSystemWatch
 	twriters    *TsonWriter
 	wg          sync.WaitGroup
@@ -30,7 +32,17 @@ type Tson struct {
 // Wait calls the tson task runner to await all end calls for all tasks shutting
 // down the file watchers as well.
 func (t *Tson) Wait() {
-	<-t.killer
+	t.wg.Wait()
+}
+
+// Restart restarts the tson task runner.
+func (t *Tson) Restart() {
+	t.restarter <- struct{}{}
+}
+
+// Stop ends the tson task runner.
+func (t *Tson) Stop() {
+	t.killer <- struct{}{}
 }
 
 // Start intializes all internal structure for the runner and initializes each
@@ -46,17 +58,31 @@ func (t *Tson) Start() error {
 
 	t.wg.Add(1)
 
+	if t.Sink == nil {
+		t.Sink = os.Stdout
+	}
+
 	t.watcher = watcher
 	t.killer = make(chan struct{})
+	t.starter = make(chan struct{})
+	t.restarter = make(chan struct{})
 	t.twriters = NewTsonWriter(len(t.Tasks), t.WriteDelay, t.writeLog)
+
+	if err := t.watcher.Begin(); err != nil {
+		return err
+	}
+
+	go t.manage()
+
+	t.starter <- struct{}{}
 
 	return nil
 }
 
 // writeLog wrties the task output logs.
 func (t *Tson) writeLog(bu bytes.Buffer) {
-	fmt.Fprint(os.Stdout, "\r\033[K")
-	fmt.Fprint(os.Stdout, bu.String())
+	fmt.Fprint(t.Sink, "\r\033[K")
+	fmt.Fprint(t.Sink, bu.String())
 }
 
 // restartTasks restarts all tasks in the log.
@@ -80,6 +106,14 @@ func (t *Tson) manage() {
 
 		for {
 			select {
+			case <-t.starter:
+				for index, task := range t.Tasks {
+					go func(ind int, ts MasterTask) {
+						wm := t.twriters.Writer(ind)
+						ts.Run(wm, wm)
+					}(index, task)
+				}
+
 			case <-t.restarter:
 				t.restartTasks()
 
@@ -87,6 +121,10 @@ func (t *Tson) manage() {
 				for index, task := range t.Tasks {
 					task.Stop(t.twriters.Writer(index))
 				}
+
+				return
+			case <-time.After(30 * time.Second):
+				continue
 			}
 		}
 	}

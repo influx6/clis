@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -113,26 +114,19 @@ func (t *Task) Stop(m io.Writer) {
 
 	t.running = false
 
-	var msg string
 	var err error
 
-	if runtime.GOOS == "windows" {
-		err = t.commando.Process.Kill()
+	if t.commando != nil && t.commando.Process != nil {
+		if runtime.GOOS == "windows" {
+			err = t.commando.Process.Kill()
+		} else {
+			err = t.commando.Process.Signal(os.Interrupt)
+		}
 	} else {
-		err = t.commando.Process.Signal(os.Interrupt)
+		err = errors.New("Task Killed!")
 	}
 
-	if errz := t.commando.Wait(); errz != nil {
-		fmt.Fprintf(m, taskError, t.Name, t.Description, t.Command, t.Parameters, errz.Error())
-	}
-
-	if err != nil {
-		msg = err.Error()
-	} else {
-		msg = "Killed Successfully!"
-	}
-
-	fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, msg)
+	fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
 
 	t.commando = nil
 }
