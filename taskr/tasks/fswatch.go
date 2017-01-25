@@ -1,6 +1,8 @@
 package tasks
 
 import (
+	"path/filepath"
+
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -8,12 +10,38 @@ import (
 // provided files for different changes which will be notified by the handle
 // passed in.
 type FileSystemWatch struct {
-	notifier *fsnotify.Watcher
 	dirs     []string
 	files    []string
 	done     chan struct{}
 	errors   func(error)
 	events   func(fsnotify.Event)
+	notifier *fsnotify.Watcher
+}
+
+// FileSystemWatchFromGlob returns a new instance of a FileSystemWatch using the glob
+// file and dirs path.
+func FileSystemWatchFromGlob(filesGlob string, dirsGlob string, ev func(fsnotify.Event), errs func(error)) (*FileSystemWatch, error) {
+	files, err := filepath.Glob(filesGlob)
+	if err != nil {
+		return nil, err
+	}
+
+	dirs, err := filepath.Glob(dirsGlob)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFileSystemWatch(files, dirs, ev, errs), nil
+}
+
+// NewFileSystemWatch returns a new instance of a FileSystemWatch.
+func NewFileSystemWatch(files []string, dirs []string, ev func(fsnotify.Event), errs func(error)) *FileSystemWatch {
+	return &FileSystemWatch{
+		dirs:   dirs,
+		files:  files,
+		events: ev,
+		errors: errs,
+	}
 }
 
 // Stop ends the watcher, returning an error if the watcher fails to end appropriately.
