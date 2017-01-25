@@ -15,6 +15,12 @@
 			"revisionTime": "2016-04-05T15:43:20Z"
 		},
 		{
+			"checksumSHA1": "hveFTNQ9YEyYRs6SWuXM+XU9qRI=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197",
+			"revisionTime": "2016-10-26T20:31:22Z"
+		},
+		{
 			"checksumSHA1": "l+9zkLpQoH1bWRCY3hx3nTRsAos=",
 			"path": "github.com/go-humble/detect",
 			"revision": "714e9e4d821cb7daac42b10f6f91fe5da00fa6fb",
@@ -73,6 +79,18 @@
 			"path": "github.com/influx6/fractals/fs",
 			"revision": "b588958f8a2e6870ab8bc10c12bad8e57a55b6a4",
 			"revisionTime": "2017-01-22T00:48:01Z"
+		},
+		{
+			"checksumSHA1": "uTQtOqR0ePMMcvuvAIksiIZxhqU=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "d75a52659825e75fff6158388dddc6a5b04f9ba5",
+			"revisionTime": "2016-12-14T18:38:57Z"
+		},
+		{
+			"checksumSHA1": "exMnsyei9H9PgttMUskof6S2554=",
+			"path": "gopkg.in/urfave/cli.v2",
+			"revision": "e485446237011b8abac93919242e6f059ad56c87",
+			"revisionTime": "2016-10-29T22:39:47Z"
 		}
 	],
 	"rootPath": "github.com/influx6/clis"
