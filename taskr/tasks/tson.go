@@ -20,6 +20,7 @@ type Tson struct {
 	FilesGlob   string        `json:"files_glob,omitempty"`
 	Files       []string      `json:"files,omitempty"`
 	WriteDelay  time.Duration `json:"write_delay"` // in seconds
+	Events      []string      `json:"events"`
 	Sink        io.Writer
 	killer      chan struct{}
 	restarter   chan struct{}
@@ -49,7 +50,17 @@ func (t *Tson) Stop() {
 // individual task runner.
 func (t *Tson) Start() error {
 	watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-		t.restarter <- struct{}{}
+		if t.Events == nil {
+			t.restarter <- struct{}{}
+			return
+		}
+
+		for _, event := range t.Events {
+			if ev.Op.String() == event {
+				t.restarter <- struct{}{}
+				return
+			}
+		}
 	}, nil)
 
 	if err != nil {
@@ -82,6 +93,7 @@ func (t *Tson) Start() error {
 // writeLog wrties the task output logs.
 func (t *Tson) writeLog(bu bytes.Buffer) {
 	fmt.Fprint(t.Sink, "\r\033[K")
+	fmt.Fprint(t.Sink, "\033[2J")
 	fmt.Fprint(t.Sink, bu.String())
 }
 
