@@ -119,10 +119,10 @@ func (t *Tson) Start() error {
 	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
 		debounce, err := utils.GetDuration(t.DebounceDelay)
 		if err != nil {
-			return err
+			t.ticker = time.NewTicker(30 * time.Second)
+		} else {
+			t.ticker = time.NewTicker(debounce)
 		}
-
-		t.ticker = time.NewTicker(debounce)
 
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
 			if atomic.LoadInt64(&t.debounce) > 0 {
