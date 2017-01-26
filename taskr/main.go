@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/influx6/clis/taskr/tasks"
 
 	"gopkg.in/urfave/cli.v2"
 )
@@ -45,6 +49,24 @@ func taskRunner(ctx *cli.Context) error {
 		infile = filepath.Join(cdir, "tasks.json")
 	}
 
-	_ = infile
+	data, err := ioutil.ReadFile(infile)
+	if err != nil {
+		return err
+	}
+
+	var taskCol []*tasks.Tson
+
+	if err := json.Unmarshal(data, &taskCol); err != nil {
+		return err
+	}
+
+	tseries := tasks.New(taskCol...)
+
+	if err := tseries.Start(); err != nil {
+		return err
+	}
+
+	tseries.Wait()
+
 	return nil
 }

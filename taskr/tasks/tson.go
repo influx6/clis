@@ -19,8 +19,8 @@ type TsonSeries struct {
 	wg    sync.WaitGroup
 }
 
-// NewTsonSeries returns a new instance of a TsonSeries
-func NewTsonSeries(tson ...*Tson) *TsonSeries {
+// New returns a new instance of a TsonSeries.
+func New(tson ...*Tson) *TsonSeries {
 	var series TsonSeries
 	series.Tasks = append(series.Tasks, tson...)
 
