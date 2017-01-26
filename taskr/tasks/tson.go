@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -72,6 +73,7 @@ type Tson struct {
 	Events      string        `json:"events"`
 	writedelay  time.Duration
 	Sink        io.Writer
+	singleRun   chan struct{}
 	killer      chan struct{}
 	restarter   chan struct{}
 	starter     chan struct{}
@@ -139,6 +141,7 @@ func (t *Tson) Start() error {
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q\n", t.FilesGlob)))
 
 	t.killer = make(chan struct{})
+	t.singleRun = make(chan struct{})
 	t.starter = make(chan struct{})
 	t.restarter = make(chan struct{})
 	t.twriters = NewTsonWriter(len(t.Tasks), t.writedelay, t.writeLog)
@@ -171,12 +174,17 @@ func (t *Tson) restartTasks() {
 		go func(ind int, ts *MasterTask) {
 			wm := t.twriters.Writer(ind)
 			ts.Run(wm, wm)
+			t.singleRun <- struct{}{}
 		}(index, task)
 	}
 }
 
 // manage handles the managed of the operations of the tson task runner.
 func (t *Tson) manage() {
+	var totalDone int64
+
+	totalTask := len(t.Tasks)
+
 	{
 		defer t.wg.Done()
 
@@ -187,7 +195,16 @@ func (t *Tson) manage() {
 					go func(ind int, ts *MasterTask) {
 						wm := t.twriters.Writer(ind)
 						ts.Run(wm, wm)
+						t.singleRun <- struct{}{}
 					}(index, task)
+				}
+
+			case <-t.singleRun:
+				atomic.AddInt64(&totalDone, 1)
+
+				if int(atomic.LoadInt64(&totalDone)) == totalTask && t.watcher == nil {
+					atomic.StoreInt64(&totalDone, 0)
+					go func() { t.killer <- struct{}{} }()
 				}
 
 			case <-t.restarter:
