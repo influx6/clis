@@ -33,8 +33,7 @@ var (
 		> taskr run --in ./bonds/task.json
 `
 
-	template = `
-[{
+	template = `[{
   "desc": "Example description",
   "write_delay": "20ms",
   "tasks": [{
