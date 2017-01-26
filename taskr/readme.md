@@ -33,7 +33,7 @@ Once all the file has been updated, we can easily run the tasks as follows.
 ```
 
 ## Secondary Usage
-Although taskr majorly loads it's self up from json files but it is just another
+Although taskr majorly loads it's self up from json file, but it is just another
 Go library and can be called as such in a `main.go` file, as demonstrate below.
 
 
