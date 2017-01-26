@@ -99,12 +99,6 @@ func (t *Tson) Stop() {
 // Start intializes all internal structure for the runner and initializes each
 // individual task runner.
 func (t *Tson) Start() error {
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON TaskManager: %q", t.Description)))
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers Files: %+q", t.Files)))
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers For Event: %q", t.Events)))
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers DirGlob: %q", t.DirsGlob)))
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q", t.FilesGlob)))
-
 	delay, err := utils.GetDuration(t.WriteDelay)
 	if err != nil {
 		return err
@@ -134,6 +128,12 @@ func (t *Tson) Start() error {
 		t.Sink = os.Stdout
 	}
 
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON TaskManager: %q\n", t.Description)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers For Event: %q\n", t.Events)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers Files: %+q\n", t.Files)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers DirGlob: %q\n", t.DirsGlob)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q\n", t.FilesGlob)))
+
 	t.watcher = watcher
 	t.killer = make(chan struct{})
 	t.starter = make(chan struct{})
@@ -153,9 +153,7 @@ func (t *Tson) Start() error {
 
 // writeLog wrties the task output logs.
 func (t *Tson) writeLog(bu *bytes.Buffer) {
-	// fmt.Fprint(t.Sink, "\r\033[K")
-	// fmt.Fprint(t.Sink, "\033[0;0H")
-	fmt.Fprintf(t.Sink, "\r %s", bu.String())
+	fmt.Fprint(t.Sink, bu.String())
 }
 
 // restartTasks restarts all tasks in the log.

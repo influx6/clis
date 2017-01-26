@@ -13,7 +13,7 @@ func TestTson(t *testing.T) {
 	var ws sync.WaitGroup
 	ws.Add(1)
 
-	tsm := tasks.NewTsonWriter(2, 16*time.Millisecond, func(dl bytes.Buffer) {
+	tsm := tasks.NewTsonWriter(2, 16*time.Millisecond, func(dl *bytes.Buffer) {
 		ws.Done()
 	})
 
