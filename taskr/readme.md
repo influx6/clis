@@ -2,11 +2,11 @@ Taskr
 =====
 Taskr came about from an effort to create as robust a task running system possible due to the frequent use of specific commands or strings of commands when building applications.
 
-There are times when a javascript file needs to be generated after updating certain go files through Gopherjs and restarting the server, but most task libraries are usually singular in the way the work.
+There are times when a javascript file needs to be generated after updating certain go files through Gopherjs and restarting the server, but most task libraries are usually singular in the way they work.
 
-Taskr provides the ability to load up task commands dependent on the OS platform which will be executed when any file changes occur, which will trigger a stopping of all current tasks and a re-run of all tasks with their appropriate before and after tasks.
+Taskr provides the ability to load up task commands dependent on the OS platform which will be executed when any file changes occur, which will trigger a stopping of all current tasks and a re-run of all tasks with their appropriate before and after tasks if the file watch is enabled, else runs the tasks as single one time call.
 
-Taskr loads off a json file in the current directory or the path supplied to it's file.
+**Taskr loads off a json file in the current directory or the path supplied to it's file.**
 
 ## Install
 

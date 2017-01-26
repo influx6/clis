@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 
@@ -131,6 +132,14 @@ func taskRunner(ctx *cli.Context) error {
 	if err := tseries.Start(); err != nil {
 		return err
 	}
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func() {
+		<-sigChan
+		tseries.Stop()
+	}()
 
 	tseries.Wait()
 
