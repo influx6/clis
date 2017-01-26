@@ -2,13 +2,13 @@ package tasks
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
 	"sync"
+	"syscall"
 )
 
 // Task defines a struct which holds commands which must be executed when runned.
@@ -122,11 +122,14 @@ func (t *Task) Stop(m io.Writer) {
 		} else {
 			err = t.commando.Process.Signal(os.Interrupt)
 		}
-	} else {
-		err = errors.New("Task Killed!")
-	}
 
-	fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+		if ws, ok := t.commando.ProcessState.Sys().(syscall.WaitStatus); ok {
+			if ws.ExitStatus() != 0 {
+				fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+			}
+		}
+
+	}
 
 	t.commando = nil
 }

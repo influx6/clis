@@ -9,18 +9,68 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/influx6/faux/utils"
 )
+
+// TsonSeries defines a higher level Tson manager which handles the management
+// of a series of independent tasks providers.
+type TsonSeries struct {
+	Tasks []*Tson
+	wg    sync.WaitGroup
+}
+
+// NewTsonSeries returns a new instance of a TsonSeries
+func NewTsonSeries(tson ...*Tson) *TsonSeries {
+	var series TsonSeries
+	series.Tasks = append(series.Tasks, tson...)
+
+	return &series
+}
+
+// Start launches the series of internal Tson tasks managers, returning an error
+// if any fails to start.
+func (ts *TsonSeries) Start() error {
+	for _, tson := range ts.Tasks {
+		if err := tson.Start(); err != nil {
+			return err
+		}
+
+		ts.wg.Add(1)
+	}
+
+	return nil
+}
+
+// Stop stops the series of internal Tson tasks managers, returning an error
+// if any fails to start.
+func (ts *TsonSeries) Stop() error {
+	for _, tson := range ts.Tasks {
+		tson.Stop()
+		ts.wg.Done()
+	}
+
+	return nil
+}
+
+// Wait calls the tson task runner to await all end calls for all tasks shutting
+// down the file watchers as well.
+func (ts *TsonSeries) Wait() {
+	ts.wg.Wait()
+}
+
+//==============================================================================
 
 // Tson defines a struct which initializes and sets up a collection of tasks
 // which will be printed in accordance with the state of all tasks.
 type Tson struct {
-	Description string        `json:"desc"`
-	Tasks       []MasterTask  `json:"tasks"`
-	DirsGlob    string        `json:"dirs_glob,omitempty"`
-	FilesGlob   string        `json:"files_glob,omitempty"`
-	Files       []string      `json:"files,omitempty"`
-	WriteDelay  time.Duration `json:"write_delay"` // in seconds
-	Events      []string      `json:"events"`
+	Description string       `json:"desc"`
+	Tasks       []MasterTask `json:"tasks"`
+	DirsGlob    string       `json:"dirs_glob,omitempty"`
+	FilesGlob   string       `json:"files_glob,omitempty"`
+	Files       []string     `json:"files,omitempty"`
+	WriteDelay  string       `json:"write_delay"` // in seconds
+	Events      []string     `json:"events"`
+	writedelay  time.Duration
 	Sink        io.Writer
 	killer      chan struct{}
 	restarter   chan struct{}
@@ -49,6 +99,13 @@ func (t *Tson) Stop() {
 // Start intializes all internal structure for the runner and initializes each
 // individual task runner.
 func (t *Tson) Start() error {
+	delay, err := utils.GetDuration(t.WriteDelay)
+	if err != nil {
+		return err
+	}
+
+	t.writedelay = delay
+
 	watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
 		if t.Events == nil {
 			t.restarter <- struct{}{}
@@ -77,7 +134,7 @@ func (t *Tson) Start() error {
 	t.killer = make(chan struct{})
 	t.starter = make(chan struct{})
 	t.restarter = make(chan struct{})
-	t.twriters = NewTsonWriter(len(t.Tasks), t.WriteDelay, t.writeLog)
+	t.twriters = NewTsonWriter(len(t.Tasks), t.writedelay, t.writeLog)
 
 	if err := t.watcher.Begin(); err != nil {
 		return err
@@ -92,9 +149,9 @@ func (t *Tson) Start() error {
 
 // writeLog wrties the task output logs.
 func (t *Tson) writeLog(bu bytes.Buffer) {
-	fmt.Fprint(t.Sink, "\r\033[K")
-	fmt.Fprint(t.Sink, "\033[2J")
-	fmt.Fprint(t.Sink, bu.String())
+	// fmt.Fprint(t.Sink, "\r\033[K")
+	// fmt.Fprint(t.Sink, "\033[0;0H")
+	fmt.Fprintf(t.Sink, "\r %s", bu.String())
 }
 
 // restartTasks restarts all tasks in the log.
@@ -199,6 +256,7 @@ func (ts *TsonWriter) tick(index int) {
 
 			for _, bx := range ts.writers {
 				bu.Write(bx.Bytes())
+				bx.Reset()
 			}
 
 			ts.handler(bu)

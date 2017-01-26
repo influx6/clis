@@ -3,6 +3,8 @@ package tasks
 import (
 	"io"
 	"time"
+
+	"github.com/influx6/faux/utils"
 )
 
 // MasterTask provides higher level structure which provides a series of tasks
@@ -11,8 +13,9 @@ import (
 // Before and After tasks cant not down the calls, they are given a maximum of
 // 5min and then killed.
 type MasterTask struct {
-	Main       *Task         `json:"main"`
-	MaxRunTime time.Duration `json:"max_runtime"` // values held in seconds.
+	Main       *Task  `json:"main"`
+	MaxRunTime string `json:"max_runtime"`
+	maxRunTime time.Duration
 
 	Before []*Task `json:"before"`
 	After  []*Task `json:"after"`
@@ -44,12 +47,18 @@ func (mt *MasterTask) Stop(m io.Writer) {
 
 // Run executes the givin master tasks in the other expected, passing the
 // provided writer to collect all responses.
-func (mt *MasterTask) Run(mout, merr io.Writer) {
+func (mt *MasterTask) Run(mout, merr io.Writer) error {
+	runtime, err := utils.GetDuration(mt.MaxRunTime)
+	if err != nil {
+		return err
+	}
+
+	mt.maxRunTime = runtime
 
 	// Execute the before tasks.
 	for _, tk := range mt.Before {
 		go func() {
-			<-time.After(mt.MaxRunTime)
+			<-time.After(mt.maxRunTime)
 			tk.Stop(mout)
 		}()
 
@@ -62,10 +71,12 @@ func (mt *MasterTask) Run(mout, merr io.Writer) {
 	// Execute the after tasks.
 	for _, tk := range mt.After {
 		go func() {
-			<-time.After(mt.MaxRunTime)
+			<-time.After(mt.maxRunTime)
 			tk.Stop(mout)
 		}()
 
 		tk.Run(mout, merr)
 	}
+
+	return nil
 }
