@@ -36,6 +36,7 @@ var (
 	template = `[{
   "desc": "Example description",
   "write_delay": "20ms",
+	"debounce_delay": "5s",
   "tasks": [{
     "max_runtime": "1m",
     "max_checktime": "500ms",

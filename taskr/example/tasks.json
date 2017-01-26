@@ -1,6 +1,7 @@
 [{
   "desc": "Example test for using json task payload",
   "write_delay": "20ms",
+	"debounce_delay": "5s",
   "tasks": [{
     "max_runtime": "500ms",
     "max_checktime": "500ms",
