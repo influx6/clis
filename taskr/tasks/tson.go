@@ -68,23 +68,26 @@ func (ts *TsonSeries) Wait() {
 // Tson defines a struct which initializes and sets up a collection of tasks
 // which will be printed in accordance with the state of all tasks.
 type Tson struct {
-	Description string        `json:"desc"`
-	Tasks       []*MasterTask `json:"tasks"`
-	DirsGlob    string        `json:"dirs_glob,omitempty"`
-	FilesGlob   string        `json:"files_glob,omitempty"`
-	Files       []string      `json:"files,omitempty"`
-	WriteDelay  string        `json:"write_delay"` // in seconds
-	Events      string        `json:"events"`
-	writedelay  time.Duration
-	Sink        io.Writer
-	singleRun   chan struct{}
-	killer      chan struct{}
-	restarter   chan struct{}
-	starter     chan struct{}
-	rebooting   int64
-	watcher     *FileSystemWatch
-	twriters    *TsonWriter
-	wg          sync.WaitGroup
+	Description   string        `json:"desc"`
+	Tasks         []*MasterTask `json:"tasks"`
+	DirsGlob      string        `json:"dirs_glob,omitempty"`
+	FilesGlob     string        `json:"files_glob,omitempty"`
+	Files         []string      `json:"files,omitempty"`
+	WriteDelay    string        `json:"write_delay"`
+	DebounceDelay string        `json:"debounce_delay"`
+	Events        string        `json:"events"`
+	writedelay    time.Duration
+	Sink          io.Writer
+	singleRun     chan struct{}
+	killer        chan struct{}
+	restarter     chan struct{}
+	starter       chan struct{}
+	rebooting     int64
+	watcher       *FileSystemWatch
+	twriters      *TsonWriter
+	wg            sync.WaitGroup
+	debounce      int64
+	ticker        *time.Ticker
 }
 
 // Wait calls the tson task runner to await all end calls for all tasks shutting
@@ -114,9 +117,15 @@ func (t *Tson) Start() error {
 	t.writedelay = delay
 
 	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
+		debounce, err := utils.GetDuration(t.DebounceDelay)
+		if err != nil {
+			return err
+		}
+
+		t.ticker = time.NewTicker(debounce)
+
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-			fmt.Printf("Event: %q\n", ev.String())
-			if t.isBooting() {
+			if atomic.LoadInt64(&t.debounce) > 0 {
 				return
 			}
 
@@ -136,6 +145,8 @@ func (t *Tson) Start() error {
 		}
 
 		t.watcher = watcher
+	} else {
+		t.ticker = time.NewTicker(30 * time.Second)
 	}
 
 	t.wg.Add(1)
@@ -222,6 +233,15 @@ func (t *Tson) manage() {
 
 		for {
 			select {
+			case <-t.ticker.C:
+				if atomic.LoadInt64(&t.debounce) > 0 {
+					atomic.StoreInt64(&t.debounce, 0)
+					continue
+				}
+
+				atomic.StoreInt64(&t.debounce, 1)
+				continue
+
 			case <-t.starter:
 				t.startTasks()
 
@@ -248,9 +268,11 @@ func (t *Tson) manage() {
 					task.Stop(t.twriters.Writer(index))
 				}
 
+				if t.ticker != nil {
+					t.ticker.Stop()
+				}
+
 				return
-			case <-time.After(30 * time.Second):
-				continue
 			}
 		}
 	}
