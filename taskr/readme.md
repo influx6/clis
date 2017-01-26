@@ -6,7 +6,7 @@ There are times when a javascript file needs to be generated after updating cert
 
 Taskr provides the ability to load up task commands dependent on the OS platform which will be executed when any file changes occur, which will trigger a stopping of all current tasks and a re-run of all tasks with their appropriate before and after tasks if the file watch is enabled, else runs the tasks as single one time call.
 
-**Taskr loads off a json file in the current directory or the path supplied to it's file.**
+*Taskr loads off a json file in the current directory or the path supplied to it's file.*
 
 ## Install
 
