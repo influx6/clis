@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/influx6/clis/taskr/tasks"
 
@@ -28,9 +29,10 @@ func main() {
 	app.Action = taskRunner
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:    "in",
-			Aliases: []string{"input"},
-			Usage:   "in=task_file",
+			Name:        "in",
+			Aliases:     []string{"input"},
+			Usage:       "in=tasks.json",
+			DefaultText: "tasks.json",
 		},
 	}
 
@@ -43,13 +45,17 @@ func taskRunner(ctx *cli.Context) error {
 		return err
 	}
 
-	infile := ctx.String("input")
+	userFile := ctx.String("input")
 
-	if infile == "" {
-		infile = filepath.Join(cdir, "tasks.json")
+	if userFile != "" {
+		if strings.HasPrefix(userFile, ".") || !strings.HasPrefix(userFile, "/") {
+			userFile = filepath.Join(cdir, userFile)
+		}
+	} else {
+		userFile = filepath.Join(cdir, "tasks.json")
 	}
 
-	data, err := ioutil.ReadFile(infile)
+	data, err := ioutil.ReadFile(userFile)
 	if err != nil {
 		return err
 	}
