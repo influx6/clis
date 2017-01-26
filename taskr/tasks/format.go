@@ -24,7 +24,7 @@ var (
 `
 
 	taskLogs = `
-	-> %s
+	 %s
 `
 
 	taskBegin = `

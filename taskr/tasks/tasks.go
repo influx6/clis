@@ -142,7 +142,7 @@ func (t *Task) Stop(m io.Writer) {
 
 		if t.commando.ProcessState != nil {
 			if ws, ok := t.commando.ProcessState.Sys().(syscall.WaitStatus); ok {
-				if ws.ExitStatus() != 0 {
+				if ws.ExitStatus() != 0 && err != nil {
 					fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
 				}
 			}
