@@ -99,6 +99,12 @@ func (t *Tson) Stop() {
 // Start intializes all internal structure for the runner and initializes each
 // individual task runner.
 func (t *Tson) Start() error {
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON TaskManager: %q", t.Description)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers Files: %+q", t.Files)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers For Event: %q", t.Events)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers DirGlob: %q", t.DirsGlob)))
+	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q", t.FilesGlob)))
+
 	delay, err := utils.GetDuration(t.WriteDelay)
 	if err != nil {
 		return err
@@ -146,7 +152,7 @@ func (t *Tson) Start() error {
 }
 
 // writeLog wrties the task output logs.
-func (t *Tson) writeLog(bu bytes.Buffer) {
+func (t *Tson) writeLog(bu *bytes.Buffer) {
 	// fmt.Fprint(t.Sink, "\r\033[K")
 	// fmt.Fprint(t.Sink, "\033[0;0H")
 	fmt.Fprintf(t.Sink, "\r %s", bu.String())
@@ -212,11 +218,11 @@ type TsonWriter struct {
 	wait       time.Duration
 	ticker     *time.Timer
 	writers    []WriteBlock
-	handler    func(bytes.Buffer)
+	handler    func(*bytes.Buffer)
 }
 
 // NewTsonWriter returns a new instance of a TsonWriter.
-func NewTsonWriter(maxWriters int, wait time.Duration, handle func(bytes.Buffer)) *TsonWriter {
+func NewTsonWriter(maxWriters int, wait time.Duration, handle func(*bytes.Buffer)) *TsonWriter {
 	tson := &TsonWriter{
 		handler:    handle,
 		maxWriters: maxWriters,
@@ -257,7 +263,7 @@ func (ts *TsonWriter) tick(index int) {
 				bx.Reset()
 			}
 
-			ts.handler(bu)
+			ts.handler(&bu)
 
 			ts.ticker = nil
 		}()
