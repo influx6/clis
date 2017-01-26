@@ -37,9 +37,7 @@ func (ts *TsonSeries) Start() error {
 		}
 
 		go func(tsn *Tson) {
-			fmt.Println("Waiting for task to die")
 			tson.Wait()
-			fmt.Println("Calling done for task that has died. ")
 			ts.wg.Done()
 		}(tson)
 
