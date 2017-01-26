@@ -32,6 +32,36 @@ Once all the file has been updated, we can easily run the tasks as follows.
 > taskr run --in ./tasks/tasks.json
 ```
 
+## Sample 'tasks.json'
+
+```json
+[{
+  "desc": "Example test for using json task payload",
+  "dirs_glob": "./*",
+  "write_delay": "20ms",
+  "tasks": [{
+    "max_runtime": "1m",
+    "main": {
+      "name": "List Dirs",
+      "command":"ls",
+      "params": ["-l"],
+      "desc": "List all directories"
+    },
+    "after":[{
+      "name": "Echo End",
+      "command":"echo",
+      "params": ["Finished Example Task"],
+      "desc": "Echos out example task"
+    }],
+    "before":[{
+      "name": "Echo Begin",
+      "command":"echo",
+      "params": ["Starting Example Task"],
+      "desc": "Echos out starting example task"
+    }]
+  }]
+}]
+```
 
 ## What next
 
