@@ -82,6 +82,7 @@ type Tson struct {
 	killer      chan struct{}
 	restarter   chan struct{}
 	starter     chan struct{}
+	rebooting   int64
 	watcher     *FileSystemWatch
 	twriters    *TsonWriter
 	wg          sync.WaitGroup
@@ -115,6 +116,10 @@ func (t *Tson) Start() error {
 
 	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
+			if t.isBooting() {
+				return
+			}
+
 			if t.Events == "" {
 				t.restarter <- struct{}{}
 				return
@@ -169,8 +174,24 @@ func (t *Tson) writeLog(bu *bytes.Buffer) {
 	fmt.Fprint(t.Sink, bu.String())
 }
 
+// startTasks restarts all tasks in the log.
+func (t *Tson) startTasks() {
+	atomic.StoreInt64(&t.rebooting, 1)
+
+	for index, task := range t.Tasks {
+		go func(ind int, ts *MasterTask) {
+			wm := t.twriters.Writer(ind)
+			ts.Run(wm, wm)
+			t.singleRun <- struct{}{}
+		}(index, task)
+	}
+
+	atomic.StoreInt64(&t.rebooting, 0)
+}
+
 // restartTasks restarts all tasks in the log.
 func (t *Tson) restartTasks() {
+	atomic.StoreInt64(&t.rebooting, 1)
 	for index, task := range t.Tasks {
 		task.Stop(t.twriters.Writer(index))
 	}
@@ -182,6 +203,13 @@ func (t *Tson) restartTasks() {
 			t.singleRun <- struct{}{}
 		}(index, task)
 	}
+
+	atomic.StoreInt64(&t.rebooting, 0)
+}
+
+// isBooting returns true/false if the task is rebooting.
+func (t *Tson) isBooting() bool {
+	return atomic.LoadInt64(&t.rebooting) == 1
 }
 
 // manage handles the managed of the operations of the tson task runner.
@@ -195,13 +223,7 @@ func (t *Tson) manage() {
 		for {
 			select {
 			case <-t.starter:
-				for index, task := range t.Tasks {
-					go func(ind int, ts *MasterTask) {
-						wm := t.twriters.Writer(ind)
-						ts.Run(wm, wm)
-						t.singleRun <- struct{}{}
-					}(index, task)
-				}
+				t.startTasks()
 
 			case <-t.singleRun:
 				atomic.AddInt64(&totalDone, 1)

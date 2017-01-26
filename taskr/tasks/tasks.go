@@ -72,7 +72,7 @@ func (t *Task) Run(outw io.Writer, errw io.Writer) {
 
 	t.commando.Wait()
 
-	if t.commando.ProcessState != nil {
+	if t.commando != nil && t.commando.ProcessState != nil {
 		fmt.Fprintf(outw, taskLogs, t.commando.ProcessState.String())
 	}
 }
