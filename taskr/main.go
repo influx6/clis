@@ -17,6 +17,19 @@ var (
 	commands = []*cli.Command{}
 
 	usage = `Provides a cli tool which executes specific orders of commands.
+
+	- Create a 'tasks.json' file easily
+
+		> taskr init
+
+	- Run all defined tasks
+
+		> taskr run
+
+
+	- Run tasks in a specificed task file
+
+		> taskr run --in ./bonds/task.json
 `
 
 	template = `
@@ -44,7 +57,6 @@ func main() {
 	app.Version = version
 	app.Commands = commands
 	app.Usage = usage
-	app.Action = taskRunner
 	app.Commands = []*cli.Command{
 		{
 			Name:        "init",
