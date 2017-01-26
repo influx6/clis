@@ -46,8 +46,8 @@ var (
       "params": ["Sample"],
       "desc": "Sample main task"
     },
-    "after":[],
-    "before":[]
+    "before":[],
+    "after":[]
   }]
 }]
 `

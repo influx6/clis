@@ -14,7 +14,7 @@ func TestTSON(t *testing.T) {
 	var tson tasks.Tson
 
 	tson.Sink = &buf
-	tson.DirsGlob = "./*"
+	tson.FilesGlob = []string{"./*"}
 	tson.Description = "Manages running of all master task"
 	tson.WriteDelay = "100ms"
 	tson.Tasks = []*tasks.MasterTask{

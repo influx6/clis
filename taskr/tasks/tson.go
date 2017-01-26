@@ -70,8 +70,7 @@ func (ts *TsonSeries) Wait() {
 type Tson struct {
 	Description   string        `json:"desc"`
 	Tasks         []*MasterTask `json:"tasks"`
-	DirsGlob      string        `json:"dirs_glob,omitempty"`
-	FilesGlob     string        `json:"files_glob,omitempty"`
+	FilesGlob     []string      `json:"files_glob,omitempty"`
 	Files         []string      `json:"files,omitempty"`
 	WriteDelay    string        `json:"write_delay"`
 	DebounceDelay string        `json:"debounce_delay"`
@@ -116,7 +115,7 @@ func (t *Tson) Start() error {
 
 	t.writedelay = delay
 
-	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
+	if t.FilesGlob != nil || t.Files != nil {
 		debounce, err := utils.GetDuration(t.DebounceDelay)
 		if err != nil {
 			t.ticker = time.NewTicker(10 * time.Second)
@@ -124,7 +123,7 @@ func (t *Tson) Start() error {
 			t.ticker = time.NewTicker(debounce)
 		}
 
-		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
+		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, func(ev fsnotify.Event) {
 			if atomic.LoadInt64(&t.debounce) == 0 {
 				atomic.StoreInt64(&t.debounce, 1)
 
@@ -144,6 +143,7 @@ func (t *Tson) Start() error {
 			return err
 		}
 
+		t.watcher.Add(t.Files...)
 		t.watcher = watcher
 	} else {
 		t.ticker = time.NewTicker(10 * time.Second)
@@ -158,7 +158,6 @@ func (t *Tson) Start() error {
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON TaskManager: %q\n", t.Description)))
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers For Event: %q\n", t.Events)))
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers Files: %+q\n", t.Files)))
-	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers DirGlob: %q\n", t.DirsGlob)))
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q\n", t.FilesGlob)))
 
 	t.killer = make(chan struct{})

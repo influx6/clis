@@ -19,19 +19,19 @@ type FileSystemWatch struct {
 
 // FileSystemWatchFromGlob returns a new instance of a FileSystemWatch using the glob
 // file and dirs path.
-func FileSystemWatchFromGlob(filesGlob string, dirsGlob string, ev func(fsnotify.Event), errs func(error)) (*FileSystemWatch, error) {
-	files, err := filepath.Glob(filesGlob)
-	if err != nil {
-		return nil, err
+func FileSystemWatchFromGlob(filesGlob []string, ev func(fsnotify.Event), errs func(error)) (*FileSystemWatch, error) {
+	var watches []string
+
+	for _, file := range filesGlob {
+		files, err := filepath.Glob(file)
+		if err != nil {
+			return nil, err
+		}
+
+		watches = append(watches, files...)
 	}
 
-	dirs, err := filepath.Glob(dirsGlob)
-	if err != nil {
-		return nil, err
-	}
-
-	dirs = append(dirs, files...)
-	return NewFileSystemWatch(dirs, ev, errs), nil
+	return NewFileSystemWatch(watches, ev, errs), nil
 }
 
 // NewFileSystemWatch returns a new instance of a FileSystemWatch.
