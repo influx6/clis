@@ -32,6 +32,104 @@ Once all the file has been updated, we can easily run the tasks as follows.
 > taskr run --in ./tasks/tasks.json
 ```
 
+## Secondary Usage
+Although taskr majorly loads it's self up from json files but it is just another
+Go library and can be called as such in a `main.go` file, as demonstrate below.
+
+
+- Create a single Tson tasks
+
+```go
+func main(){
+
+	var tson tasks.Tson
+	tson.Sink = os.Stdout
+	tson.FilesGlob = []string{"./*"}
+	tson.Description = "Manages running of all master task"
+	tson.WriteDelay = "100ms"
+	tson.Tasks = []*tasks.MasterTask{
+		{
+			MaxRunTime: "20s",
+			Main: &tasks.Task{
+				Name:        "TodaysFileReport",
+				Description: "Finds all modified files today",
+				Command:     "find",
+				Parameters:  []string{"~ -type f -mtime 0"},
+			},
+			Before: []*tasks.Task{
+				{
+					Name:        "ListDir",
+					Description: "List Current Dir",
+					Command:     "ls",
+				},
+				{
+					Name:        "EchoName",
+					Description: "Echo Starting",
+					Command:     "echo",
+					Parameters:  []string{"'Starting Todays report'"},
+				},
+			},
+			After: []*tasks.Task{
+				{
+					Name:        "EchoName",
+					Description: "Echo Ending",
+					Command:     "echo",
+					Parameters:  []string{"'Ending Todays report'"},
+				},
+			},
+		},
+	}
+
+  tson.Start()
+}
+```
+
+- Create a Multiple Tson tasks
+
+```go
+func main(){
+
+	var tson tasks.Tson
+	tson.Sink = os.Stdout
+	tson.FilesGlob = []string{"./*"}
+	tson.Description = "Manages running of all master task"
+	tson.WriteDelay = "100ms"
+	tson.Tasks = []*tasks.MasterTask{
+		{
+			MaxRunTime: "20s",
+			Main: &tasks.Task{
+				Name:        "TodaysFileReport",
+				Description: "Finds all modified files today",
+				Command:     "find",
+				Parameters:  []string{"~ -type f -mtime 0"},
+			},
+		},
+	}
+
+	var tson2 tasks.Tson
+	tson2.Sink = os.Stdout
+	tson2.FilesGlob = []string{"./*"}
+	tson2.Description = "Manages running of all master task"
+	tson2.WriteDelay = "100ms"
+	tson2.Tasks = []*tasks.MasterTask{
+		{
+			MaxRunTime: "20s",
+			Main: &tasks.Task{
+				Name:        "TodaysFileReport",
+				Description: "Finds all modified files today",
+				Command:     "find",
+				Parameters:  []string{"~ -type f -mtime 0"},
+			},
+		},
+	}
+
+  series := tasks.New(&tson, &tson2)
+  series.Start()
+
+  series.Wait()
+}
+```
+
 ## Sample 'tasks.json'
 
 ```json

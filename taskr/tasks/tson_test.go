@@ -9,7 +9,7 @@ import (
 	"github.com/influx6/clis/taskr/tasks"
 )
 
-func TestTson(t *testing.T) {
+func TestTsonWriter(t *testing.T) {
 	var ws sync.WaitGroup
 	ws.Add(1)
 
