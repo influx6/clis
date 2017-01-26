@@ -13,12 +13,12 @@ import (
 // Before and After tasks cant not down the calls, they are given a maximum of
 // 5min and then killed.
 type MasterTask struct {
-	Main       *Task  `json:"main"`
-	MaxRunTime string `json:"max_runtime"`
-	maxRunTime time.Duration
+	Main       *Task   `json:"main"`
+	MaxRunTime string  `json:"max_runtime"`
+	Before     []*Task `json:"before"`
+	After      []*Task `json:"after"`
 
-	Before []*Task `json:"before"`
-	After  []*Task `json:"after"`
+	maxRunTime time.Duration
 }
 
 // Stop ends all it's internal tasks.

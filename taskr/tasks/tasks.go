@@ -16,7 +16,7 @@ type Task struct {
 	Name        string   `json:"name"`
 	Command     string   `json:"command"`
 	Parameters  []string `json:"params"`
-	Description string   `json:"description"`
+	Description string   `json:"desc"`
 	commando    *exec.Cmd
 	running     bool
 	rl          sync.Mutex
