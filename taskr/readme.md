@@ -41,6 +41,7 @@ Once all the file has been updated, we can easily run the tasks as follows.
   "write_delay": "20ms",
   "tasks": [{
     "max_runtime": "1m",
+    "max_checktime": "500ms",
     "main": {
       "name": "List Dirs",
       "command":"ls",

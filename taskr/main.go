@@ -38,6 +38,7 @@ var (
   "write_delay": "20ms",
   "tasks": [{
     "max_runtime": "1m",
+    "max_checktime": "500ms",
     "main": {
       "name": "Sample",
       "command":"echo",

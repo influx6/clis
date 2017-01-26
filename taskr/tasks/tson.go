@@ -36,6 +36,13 @@ func (ts *TsonSeries) Start() error {
 			return err
 		}
 
+		go func(tsn *Tson) {
+			fmt.Println("Waiting for task to die")
+			tson.Wait()
+			fmt.Println("Calling done for task that has died. ")
+			ts.wg.Done()
+		}(tson)
+
 		ts.wg.Add(1)
 	}
 
@@ -182,7 +189,6 @@ func (t *Tson) restartTasks() {
 // manage handles the managed of the operations of the tson task runner.
 func (t *Tson) manage() {
 	var totalDone int64
-
 	totalTask := len(t.Tasks)
 
 	{
@@ -202,9 +208,16 @@ func (t *Tson) manage() {
 			case <-t.singleRun:
 				atomic.AddInt64(&totalDone, 1)
 
-				if int(atomic.LoadInt64(&totalDone)) == totalTask && t.watcher == nil {
+				done := int(atomic.LoadInt64(&totalDone))
+
+				if done == totalTask && t.watcher == nil {
 					atomic.StoreInt64(&totalDone, 0)
-					go func() { t.killer <- struct{}{} }()
+
+					// Create goroutine to wait until write ends and then kill.
+					go func() {
+						t.twriters.Wait()
+						t.killer <- struct{}{}
+					}()
 				}
 
 			case <-t.restarter:
@@ -239,21 +252,21 @@ type TsonWriter struct {
 	ticker     *time.Timer
 	writers    []WriteBlock
 	handler    func(*bytes.Buffer)
+	wg         sync.WaitGroup
 }
 
 // NewTsonWriter returns a new instance of a TsonWriter.
 func NewTsonWriter(maxWriters int, wait time.Duration, handle func(*bytes.Buffer)) *TsonWriter {
-	tson := &TsonWriter{
-		handler:    handle,
-		maxWriters: maxWriters,
-		wait:       wait,
-	}
+	var tson TsonWriter
+	tson.handler = handle
+	tson.maxWriters = maxWriters
+	tson.wait = wait
 
 	for index := 0; index < maxWriters; index++ {
 		tson.writers = append(tson.writers, NewTickWriter(index, tson.tick))
 	}
 
-	return tson
+	return &tson
 }
 
 // Writer calls the giving index with the provided byte.
@@ -268,9 +281,15 @@ func (ts *TsonWriter) Reset() {
 	}
 }
 
+// Wait checks if the timer has finished else waits for it.
+func (ts *TsonWriter) Wait() {
+	ts.wg.Wait()
+}
+
 // tick is called for all internal tson writers that have updates.
 func (ts *TsonWriter) tick(index int) {
 	if ts.ticker == nil {
+		ts.wg.Add(1)
 		ts.ticker = time.NewTimer(ts.wait)
 
 		go func() {
@@ -286,6 +305,7 @@ func (ts *TsonWriter) tick(index int) {
 			ts.handler(&bu)
 
 			ts.ticker = nil
+			ts.wg.Done()
 		}()
 
 		return

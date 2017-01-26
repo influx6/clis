@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 )
 
 // Task defines a struct which holds commands which must be executed when runned.
@@ -17,6 +18,7 @@ type Task struct {
 	Command     string   `json:"command"`
 	Parameters  []string `json:"params"`
 	Description string   `json:"desc"`
+	EndCheck    time.Duration
 	commando    *exec.Cmd
 	running     bool
 	rl          sync.Mutex
@@ -33,6 +35,10 @@ func (t *Task) Wait() {
 
 // Stopped returns true/false if the given task has been stopped or not started.
 func (t *Task) Stopped() bool {
+	if t.commando != nil && t.commando.ProcessState != nil {
+		return t.commando.ProcessState.Exited()
+	}
+
 	return t.commando == nil
 }
 
@@ -52,18 +58,22 @@ func (t *Task) Run(outw io.Writer, errw io.Writer) {
 		return
 	}
 
+	// Lunch a timer to check if the main had finished executing.
+	go func() {
+		for {
+			<-time.After(t.EndCheck)
+
+			if t.Stopped() {
+				t.Stop(outw)
+				return
+			}
+		}
+	}()
+
 	t.commando.Wait()
 
 	if t.commando.ProcessState != nil {
 		fmt.Fprintf(outw, taskLogs, t.commando.ProcessState.String())
-
-		// if t.commando.ProcessState.Exited() {
-		// 	if t.commando.ProcessState.Success() {
-		// 		fmt.Fprintf(outw, taskOutput, "Done!")
-		// 	} else {
-		// 		fmt.Fprintf(outw, taskErrOutput, "Failed!")
-		// 	}
-		// }
 	}
 }
 
@@ -85,7 +95,6 @@ func (t *Task) inputLoop(outM, errM io.Writer) {
 	} else {
 		go t.readInput(errReader, errM)
 	}
-
 }
 
 func (t *Task) readInput(reader io.ReadCloser, out io.Writer) {
@@ -105,6 +114,10 @@ func (t *Task) readInput(reader io.ReadCloser, out io.Writer) {
 
 // Stop ends the task which when initialized.
 func (t *Task) Stop(m io.Writer) {
+	if t.commando == nil {
+		return
+	}
+
 	t.rl.Lock()
 	if !t.running {
 		t.rl.Unlock()
@@ -116,19 +129,24 @@ func (t *Task) Stop(m io.Writer) {
 
 	var err error
 
-	if t.commando != nil && t.commando.Process != nil {
-		if runtime.GOOS == "windows" {
-			err = t.commando.Process.Kill()
-		} else {
-			err = t.commando.Process.Signal(os.Interrupt)
+	if t.commando != nil {
+		if t.commando.Process != nil {
+
+			if runtime.GOOS == "windows" {
+				err = t.commando.Process.Kill()
+			} else {
+				err = t.commando.Process.Signal(os.Interrupt)
+			}
+
 		}
 
-		if ws, ok := t.commando.ProcessState.Sys().(syscall.WaitStatus); ok {
-			if ws.ExitStatus() != 0 {
-				fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+		if t.commando.ProcessState != nil {
+			if ws, ok := t.commando.ProcessState.Sys().(syscall.WaitStatus); ok {
+				if ws.ExitStatus() != 0 {
+					fmt.Fprintf(m, taskKill, t.Name, t.Description, t.Command, t.Parameters, err.Error())
+				}
 			}
 		}
-
 	}
 
 	t.commando = nil

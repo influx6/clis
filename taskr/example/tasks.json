@@ -1,9 +1,9 @@
 [{
   "desc": "Example test for using json task payload",
-  "dirs_glob": "./*",
   "write_delay": "20ms",
   "tasks": [{
-    "max_runtime": "1m",
+    "max_runtime": "500ms",
+    "max_checktime": "500ms",
     "main": {
       "name": "List Dirs",
       "command":"ls",
