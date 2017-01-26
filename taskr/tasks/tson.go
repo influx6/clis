@@ -143,7 +143,7 @@ func (t *Tson) Start() error {
 			return err
 		}
 
-		t.watcher.Add(t.Files...)
+		watcher.Add(t.Files...)
 		t.watcher = watcher
 	} else {
 		t.ticker = time.NewTicker(10 * time.Second)
