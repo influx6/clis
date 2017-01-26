@@ -126,6 +126,7 @@ func (t *Tson) Start() error {
 
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
 			if atomic.LoadInt64(&t.debounce) > 0 {
+				atomic.StoreInt64(&t.debounce, 1)
 				return
 			}
 
