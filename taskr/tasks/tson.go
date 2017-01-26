@@ -125,7 +125,6 @@ func (t *Tson) Start() error {
 		}
 
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-			fmt.Printf("DB: %q\n", ev.String())
 			if atomic.LoadInt64(&t.debounce) > 0 {
 				atomic.StoreInt64(&t.debounce, 1)
 				return
@@ -148,7 +147,7 @@ func (t *Tson) Start() error {
 
 		t.watcher = watcher
 	} else {
-		t.ticker = time.NewTicker(30 * time.Second)
+		t.ticker = time.NewTicker(10 * time.Second)
 	}
 
 	t.wg.Add(1)
