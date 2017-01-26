@@ -28,11 +28,11 @@ var (
 `
 
 	taskBegin = `
-	Starting Task: %q(%q)
+	Starting Task: %q - (%q)
 `
 
 	taskEnd = `
-	Stopping Task: %q(%q)
+	Stopping Task: %q - (%q)
 `
 
 	taskMessage = `
