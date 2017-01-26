@@ -18,6 +18,24 @@ var (
 
 	usage = `Provides a cli tool which executes specific orders of commands.
 `
+
+	template = `
+[{
+  "desc": "Example description",
+  "write_delay": "20ms",
+  "tasks": [{
+    "max_runtime": "1m",
+    "main": {
+      "name": "Sample",
+      "command":"echo",
+      "params": ["Sample"],
+      "desc": "Sample main task"
+    },
+    "after":[],
+    "before":[]
+  }]
+}]
+`
 )
 
 func main() {
@@ -27,16 +45,45 @@ func main() {
 	app.Commands = commands
 	app.Usage = usage
 	app.Action = taskRunner
-	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:        "in",
-			Aliases:     []string{"input"},
-			Usage:       "in=tasks.json",
-			DefaultText: "tasks.json",
+	app.Commands = []*cli.Command{
+		{
+			Name:        "init",
+			Usage:       "taskr init",
+			Description: "Generates a initial tasks.json file for customizer",
+			Action:      initJSON,
+		},
+		{
+			Name:        "run",
+			Usage:       "taskr run",
+			Description: "Attempts to Load a tasks.json from the current path or the provided path to execute tasks defined in it",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:        "in",
+					Aliases:     []string{"input"},
+					Usage:       "in=tasks.json",
+					DefaultText: "tasks.json",
+				},
+			},
+			Action: taskRunner,
 		},
 	}
 
 	app.Run(os.Args)
+}
+
+func initJSON(ctx *cli.Context) error {
+	cdir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	newFile := filepath.Join(cdir, "tasks.json")
+
+	if err := ioutil.WriteFile(newFile, []byte(template), 0777); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func taskRunner(ctx *cli.Context) error {

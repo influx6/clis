@@ -17,7 +17,7 @@ func TestTSON(t *testing.T) {
 	tson.DirsGlob = "./*"
 	tson.Description = "Manages running of all master task"
 	tson.WriteDelay = "100ms"
-	tson.Tasks = []tasks.MasterTask{
+	tson.Tasks = []*tasks.MasterTask{
 		{
 			MaxRunTime: "20s",
 			Main: &tasks.Task{

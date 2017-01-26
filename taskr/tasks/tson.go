@@ -20,9 +20,9 @@ type TsonSeries struct {
 }
 
 // New returns a new instance of a TsonSeries.
-func New(tson ...*Tson) *TsonSeries {
+func New(tsons ...*Tson) *TsonSeries {
 	var series TsonSeries
-	series.Tasks = append(series.Tasks, tson...)
+	series.Tasks = append(series.Tasks, tsons...)
 
 	return &series
 }
@@ -63,13 +63,13 @@ func (ts *TsonSeries) Wait() {
 // Tson defines a struct which initializes and sets up a collection of tasks
 // which will be printed in accordance with the state of all tasks.
 type Tson struct {
-	Description string       `json:"desc"`
-	Tasks       []MasterTask `json:"tasks"`
-	DirsGlob    string       `json:"dirs_glob,omitempty"`
-	FilesGlob   string       `json:"files_glob,omitempty"`
-	Files       []string     `json:"files,omitempty"`
-	WriteDelay  string       `json:"write_delay"` // in seconds
-	Events      string       `json:"events"`
+	Description string        `json:"desc"`
+	Tasks       []*MasterTask `json:"tasks"`
+	DirsGlob    string        `json:"dirs_glob,omitempty"`
+	FilesGlob   string        `json:"files_glob,omitempty"`
+	Files       []string      `json:"files,omitempty"`
+	WriteDelay  string        `json:"write_delay"` // in seconds
+	Events      string        `json:"events"`
 	writedelay  time.Duration
 	Sink        io.Writer
 	killer      chan struct{}
@@ -106,20 +106,24 @@ func (t *Tson) Start() error {
 
 	t.writedelay = delay
 
-	watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-		if t.Events == "" {
-			t.restarter <- struct{}{}
-			return
+	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
+		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
+			if t.Events == "" {
+				t.restarter <- struct{}{}
+				return
+			}
+
+			if t.Events == ev.Op.String() {
+				t.restarter <- struct{}{}
+				return
+			}
+		}, nil)
+
+		if err != nil {
+			return err
 		}
 
-		if t.Events == ev.Op.String() {
-			t.restarter <- struct{}{}
-			return
-		}
-	}, nil)
-
-	if err != nil {
-		return err
+		t.watcher = watcher
 	}
 
 	t.wg.Add(1)
@@ -134,14 +138,15 @@ func (t *Tson) Start() error {
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers DirGlob: %q\n", t.DirsGlob)))
 	t.writeLog(bytes.NewBufferString(fmt.Sprintf("TSON Watchers FilesGlob: %q\n", t.FilesGlob)))
 
-	t.watcher = watcher
 	t.killer = make(chan struct{})
 	t.starter = make(chan struct{})
 	t.restarter = make(chan struct{})
 	t.twriters = NewTsonWriter(len(t.Tasks), t.writedelay, t.writeLog)
 
-	if err := t.watcher.Begin(); err != nil {
-		return err
+	if t.watcher != nil {
+		if err := t.watcher.Begin(); err != nil {
+			return err
+		}
 	}
 
 	go t.manage()
@@ -163,7 +168,7 @@ func (t *Tson) restartTasks() {
 	}
 
 	for index, task := range t.Tasks {
-		go func(ind int, ts MasterTask) {
+		go func(ind int, ts *MasterTask) {
 			wm := t.twriters.Writer(ind)
 			ts.Run(wm, wm)
 		}(index, task)
@@ -179,7 +184,7 @@ func (t *Tson) manage() {
 			select {
 			case <-t.starter:
 				for index, task := range t.Tasks {
-					go func(ind int, ts MasterTask) {
+					go func(ind int, ts *MasterTask) {
 						wm := t.twriters.Writer(ind)
 						ts.Run(wm, wm)
 					}(index, task)

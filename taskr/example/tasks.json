@@ -1,6 +1,6 @@
 [{
   "desc": "Example test for using json task payload",
-  "dirs_glob": "/*",
+  "dirs_glob": "./*",
   "write_delay": "20ms",
   "tasks": [{
     "max_runtime": "1m",
@@ -8,19 +8,19 @@
       "name": "List Dirs",
       "command":"ls",
       "params": ["-l"],
-      "desc": "List all directories",
+      "desc": "List all directories"
     },
     "after":[{
       "name": "Echo End",
       "command":"echo",
       "params": ["Finished Example Task"],
-      "desc": "Echos out example task",
+      "desc": "Echos out example task"
     }],
     "before":[{
       "name": "Echo Begin",
       "command":"echo",
       "params": ["Starting Example Task"],
-      "desc": "Echos out starting example task",
-    }],
+      "desc": "Echos out starting example task"
+    }]
   }]
 }]
