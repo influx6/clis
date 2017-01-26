@@ -125,19 +125,18 @@ func (t *Tson) Start() error {
 		}
 
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-			if atomic.LoadInt64(&t.debounce) > 0 {
+			if atomic.LoadInt64(&t.debounce) == 0 {
 				atomic.StoreInt64(&t.debounce, 1)
-				return
-			}
 
-			if t.Events == "" {
-				t.restarter <- struct{}{}
-				return
-			}
+				if t.Events == "" {
+					t.restarter <- struct{}{}
+					return
+				}
 
-			if t.Events == ev.Op.String() {
-				t.restarter <- struct{}{}
-				return
+				if t.Events == ev.Op.String() {
+					t.restarter <- struct{}{}
+					return
+				}
 			}
 		}, nil)
 
