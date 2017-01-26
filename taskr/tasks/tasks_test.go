@@ -10,10 +10,10 @@ import (
 
 func TestTSON(t *testing.T) {
 
-	// var buf bytes.Buffer
+	var buf bytes.Buffer
 	var tson tasks.Tson
 
-	// tson.Sink = &buf
+	tson.Sink = &buf
 	tson.DirsGlob = "./*"
 	tson.Description = "Manages running of all master task"
 	tson.WriteDelay = "100ms"
@@ -66,9 +66,9 @@ func TestTSON(t *testing.T) {
 
 	tson.Wait()
 
-	// if buf.Len() == 0 {
-	// 	t.Fatal("Should  have contain data after tasks execution.")
-	// }
+	if buf.Len() == 0 {
+		t.Fatal("Should  have contain data after tasks execution.")
+	}
 }
 
 func TestMasterTask(t *testing.T) {
