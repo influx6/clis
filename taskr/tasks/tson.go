@@ -116,6 +116,7 @@ func (t *Tson) Start() error {
 
 	if t.DirsGlob != "" || t.FilesGlob != "" || t.Files != nil {
 		watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
+			fmt.Printf("Event: %q\n", ev.String())
 			if t.isBooting() {
 				return
 			}
