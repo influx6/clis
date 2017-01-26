@@ -69,7 +69,7 @@ type Tson struct {
 	FilesGlob   string       `json:"files_glob,omitempty"`
 	Files       []string     `json:"files,omitempty"`
 	WriteDelay  string       `json:"write_delay"` // in seconds
-	Events      []string     `json:"events"`
+	Events      string       `json:"events"`
 	writedelay  time.Duration
 	Sink        io.Writer
 	killer      chan struct{}
@@ -107,16 +107,14 @@ func (t *Tson) Start() error {
 	t.writedelay = delay
 
 	watcher, err := FileSystemWatchFromGlob(t.FilesGlob, t.DirsGlob, func(ev fsnotify.Event) {
-		if t.Events == nil {
+		if t.Events == "" {
 			t.restarter <- struct{}{}
 			return
 		}
 
-		for _, event := range t.Events {
-			if ev.Op.String() == event {
-				t.restarter <- struct{}{}
-				return
-			}
+		if t.Events == ev.Op.String() {
+			t.restarter <- struct{}{}
+			return
 		}
 	}, nil)
 
