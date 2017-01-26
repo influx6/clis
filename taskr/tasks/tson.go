@@ -52,7 +52,6 @@ func (ts *TsonSeries) Start() error {
 func (ts *TsonSeries) Stop() error {
 	for _, tson := range ts.Tasks {
 		tson.Stop()
-		ts.wg.Done()
 	}
 
 	return nil
