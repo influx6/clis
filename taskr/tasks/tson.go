@@ -239,7 +239,6 @@ func (t *Tson) manage() {
 				}
 
 				atomic.StoreInt64(&t.debounce, 1)
-				continue
 
 			case <-t.starter:
 				t.startTasks()
