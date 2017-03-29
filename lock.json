@@ -1,5 +1,5 @@
 {
-    "memo": "5459d71013bf89a3bcf48d1a2f5f2fcb9f6c6e080c7d135875e4a4f126ff6c0a",
+    "memo": "ae3834e4381176f7d4b23c710418e7530e76ccb5bc1875a6e915a05593f5e20d",
     "projects": [
         {
             "name": "github.com/PuerkitoBio/goquery",
@@ -47,7 +47,7 @@
         {
             "name": "github.com/influx6/fractals",
             "branch": "master",
-            "revision": "84185fbdc10a4c2cea75ce5527377a996adf5d84",
+            "revision": "e08497f9dedf128b54551c9ab5173ddf7ebdbf77",
             "packages": [
                 ".",
                 "fhttp",
