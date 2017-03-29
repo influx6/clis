@@ -1,5 +1,5 @@
 {
-    "memo": "543aca996da2bbc0dc6b8927b7e9c57e841270e97726bba94b3b381d8bca51b8",
+    "memo": "5459d71013bf89a3bcf48d1a2f5f2fcb9f6c6e080c7d135875e4a4f126ff6c0a",
     "projects": [
         {
             "name": "github.com/PuerkitoBio/goquery",
@@ -19,7 +19,7 @@
         },
         {
             "name": "github.com/dimfeld/httptreemux",
-            "version": "v3.8.0",
+            "branch": "master",
             "revision": "86f7c217d9043ebc6adfd8e2ed04a0bb1e1db651",
             "packages": [
                 "."
@@ -34,28 +34,11 @@
             ]
         },
         {
-            "name": "github.com/go-humble/detect",
-            "branch": "master",
-            "revision": "714e9e4d821cb7daac42b10f6f91fe5da00fa6fb",
-            "packages": [
-                "."
-            ]
-        },
-        {
-            "name": "github.com/gopherjs/gopherjs",
-            "branch": "master",
-            "revision": "3496c6f94e1b945f3fc9580f6982675c0a74cd6c",
-            "packages": [
-                "js"
-            ]
-        },
-        {
             "name": "github.com/influx6/faux",
             "branch": "master",
-            "revision": "d956f1012d971bd8151ee7815da39653e9b9b705",
+            "revision": "7fe0c0f31e1b1075fca7b9750e087696e94d9f12",
             "packages": [
                 "context",
-                "raf",
                 "reflection",
                 "regos",
                 "utils"
@@ -64,7 +47,7 @@
         {
             "name": "github.com/influx6/fractals",
             "branch": "master",
-            "revision": "d358d52a2a2cd9245a2769a83fdf3608c30eec02",
+            "revision": "84185fbdc10a4c2cea75ce5527377a996adf5d84",
             "packages": [
                 ".",
                 "fhttp",
