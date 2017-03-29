@@ -1,0 +1,101 @@
+{
+    "memo": "00efb37a6437d0559f951775ebfa279d857f61daac5923ffdf73a46f83c9a9c4",
+    "projects": [
+        {
+            "name": "github.com/PuerkitoBio/goquery",
+            "version": "v1.1.0",
+            "revision": "e1271ee34c6a305e38566ecd27ae374944907ee9",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/andybalholm/cascadia",
+            "branch": "master",
+            "revision": "349dd0209470eabd9514242c688c403c0926d266",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/dimfeld/httptreemux",
+            "version": "v3.8.0",
+            "revision": "86f7c217d9043ebc6adfd8e2ed04a0bb1e1db651",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/fsnotify/fsnotify",
+            "branch": "master",
+            "revision": "a904159b9206978bb6d53fcc7a769e5cd726c737",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/go-humble/detect",
+            "branch": "master",
+            "revision": "714e9e4d821cb7daac42b10f6f91fe5da00fa6fb",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gopherjs/gopherjs",
+            "branch": "master",
+            "revision": "3496c6f94e1b945f3fc9580f6982675c0a74cd6c",
+            "packages": [
+                "js"
+            ]
+        },
+        {
+            "name": "github.com/influx6/faux",
+            "branch": "master",
+            "revision": "d956f1012d971bd8151ee7815da39653e9b9b705",
+            "packages": [
+                "context",
+                "raf",
+                "reflection",
+                "regos",
+                "utils"
+            ]
+        },
+        {
+            "name": "github.com/influx6/fractals",
+            "branch": "master",
+            "revision": "d358d52a2a2cd9245a2769a83fdf3608c30eec02",
+            "packages": [
+                ".",
+                "fhttp",
+                "fhttp/mimes",
+                "fs"
+            ]
+        },
+        {
+            "name": "golang.org/x/net",
+            "branch": "master",
+            "revision": "ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d",
+            "packages": [
+                "html",
+                "html/atom"
+            ]
+        },
+        {
+            "name": "golang.org/x/sys",
+            "branch": "master",
+            "revision": "e24f485414aeafb646f6fca458b0bf869c0880a1",
+            "packages": [
+                "unix"
+            ]
+        },
+        {
+            "name": "gopkg.in/urfave/cli.v2",
+            "branch": "v2",
+            "revision": "e485446237011b8abac93919242e6f059ad56c87",
+            "packages": [
+                "."
+            ]
+        }
+    ]
+}

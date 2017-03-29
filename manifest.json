@@ -1,0 +1,16 @@
+{
+    "dependencies": {
+        "github.com/fsnotify/fsnotify": {
+            "branch": "master"
+        },
+        "github.com/influx6/faux": {
+            "branch": "master"
+        },
+        "github.com/influx6/fractals": {
+            "branch": "master"
+        },
+        "gopkg.in/urfave/cli.v2": {
+            "branch": "v2"
+        }
+    }
+}

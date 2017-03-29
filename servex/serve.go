@@ -69,7 +69,7 @@ func main() {
 		assetPath = filepath.Join(pwd, assetPath)
 	}
 
-	apphttp := fhttp.Drive(fhttp.MW(fhttp.RequestLogger(os.Stdout)))(fhttp.MW(fhttp.ResponseLogger(os.Stdout)))
+	apphttp := fhttp.Drive(fhttp.MW(fhttp.CORS(), fhttp.RequestLogger(os.Stdout)))(fhttp.MW(fhttp.ResponseLogger(os.Stdout)))
 
 	approuter := fhttp.Route(apphttp)
 
